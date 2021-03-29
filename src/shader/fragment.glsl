@@ -11,8 +11,9 @@ void main() {
     float brightness = 0.3;
     float offset = 0.2; // [0.2, 0.5]
     float depth = vPosition.z * 0.5 + 0.5;
-    
-    vec3 color = mix(uColorA, uColorB, depth);
 
+    vec3 color = mix(uColorA, uColorB, depth);
+    vec2 center = vec2(0.5, 0.5);
+    
     gl_FragColor = vec4(color, depth * brightness + offset);
 }

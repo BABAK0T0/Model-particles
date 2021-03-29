@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import gsap from "gsap";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 import { MeshSurfaceSampler } from "three/examples/jsm/math/MeshSurfaceSampler";
@@ -12,6 +13,8 @@ export default class Model {
     this.file = obj.file;
     this.colorA = obj.colorA;
     this.colorB = obj.colorB;
+    this.isActive = false;
+    this.background = obj.background;
     this.scene = obj.scene;
 
     this.loader = new GLTFLoader();
@@ -44,6 +47,8 @@ export default class Model {
       //   });
       this.particlesMaterial = new THREE.ShaderMaterial({
         uniforms: {
+          uTime: { value: 0 },
+          uScale: { value: 0 },
           uColorA: { value: new THREE.Color(this.colorA) },
           uColorB: { value: new THREE.Color(this.colorB) },
         },
@@ -61,6 +66,7 @@ export default class Model {
       const sampler = new MeshSurfaceSampler(this.mesh).build();
       this.particlesGeometry = new THREE.BufferGeometry();
       const particlesPosition = new Float32Array(numParticles * 3);
+      const particlesRandomness = new Float32Array(numParticles * 3);
 
       for (let i = 0; i < numParticles; i++) {
         const newPosition = new THREE.Vector3();
@@ -69,11 +75,20 @@ export default class Model {
           [newPosition.x, newPosition.y, newPosition.z],
           i * 3
         );
+        particlesRandomness.set(
+          [Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1],
+          i * 3
+        );
       }
 
       this.particlesGeometry.setAttribute(
         "position",
         new THREE.BufferAttribute(particlesPosition, 3)
+      );
+
+      this.particlesGeometry.setAttribute(
+        "aRandom",
+        new THREE.BufferAttribute(particlesRandomness, 3)
       );
 
       // Particles
@@ -88,9 +103,52 @@ export default class Model {
 
   add() {
     this.scene.add(this.particles);
+
+    gsap.to(this.particlesMaterial.uniforms.uScale, {
+      value: 1,
+      duration: 0.8,
+      ease: "power3.out",
+      delay: 0.3,
+    });
+
+    // Only used when a NEW model is clicked (not the same)
+    if (!this.isActive) {
+      gsap.fromTo(
+        this.particles.rotation,
+        {
+          y: Math.PI,
+        },
+        {
+          y: 0,
+          duration: 0.8,
+          ease: "power3.out",
+        }
+      );
+
+      gsap.to("body", {
+        background: this.background,
+        duration: 0.8,
+      });
+    }
+
+    this.isActive = true;
   }
 
   remove() {
-    this.scene.remove(this.particles);
+    gsap.to(this.particlesMaterial.uniforms.uScale, {
+      value: 0,
+      duration: 0.8,
+      ease: "power3.out",
+      onComplete: () => {
+        this.scene.remove(this.particles);
+        this.isActive = false;
+      },
+    });
+
+    gsap.to(this.particles.rotation, {
+      y: Math.PI,
+      duration: 0.8,
+      ease: "power3.out",
+    });
   }
 }

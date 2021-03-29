@@ -2,12 +2,16 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 import { MeshSurfaceSampler } from "three/examples/jsm/math/MeshSurfaceSampler";
+import vertexShader from "./shader/vertex.glsl";
+import fragmentShader from "./shader/fragment.glsl";
 
 export default class Model {
   constructor(obj) {
+    this.default = obj.default;
     this.name = obj.name;
     this.file = obj.file;
-    this.default = obj.default;
+    this.colorA = obj.colorA;
+    this.colorB = obj.colorB;
     this.scene = obj.scene;
 
     this.loader = new GLTFLoader();
@@ -34,9 +38,21 @@ export default class Model {
       this.geometry = this.mesh.geometry;
 
       // Particles Material
-      this.particlesMaterial = new THREE.PointsMaterial({
-        color: "red",
-        size: 0.02,
+      //   this.particlesMaterial = new THREE.PointsMaterial({
+      //     color: "red",
+      //     size: 0.02,
+      //   });
+      this.particlesMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+          uColorA: { value: new THREE.Color(this.colorA) },
+          uColorB: { value: new THREE.Color(this.colorB) },
+        },
+        vertexShader,
+        fragmentShader,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
       });
 
       // Partciles Geometry
@@ -59,7 +75,7 @@ export default class Model {
         "position",
         new THREE.BufferAttribute(particlesPosition, 3)
       );
-      console.log(this.particlesGeometry);
+
       // Particles
       this.particles = new THREE.Points(
         this.particlesGeometry,

@@ -54,15 +54,19 @@ Helpers
 Models
 ------------------------------*/
 const skull = new Model({
+  default: true,
   name: "skull",
   file: "./models/skull.glb",
-  default: true,
+  colorA: "red",
+  colorB: "yellow",
   scene,
 });
 
 const horse = new Model({
   name: "horse",
   file: "./models/horse.glb",
+  colorA: "blue",
+  colorB: "pink",
   scene,
 });
 
